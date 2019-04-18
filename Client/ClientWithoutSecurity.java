@@ -3,6 +3,7 @@ package Client;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
@@ -84,49 +85,59 @@ public class ClientWithoutSecurity {
 		
 			System.out.println("Receiving Certificate");
 			
-			int certBytes = fromServer.readInt();
-			byte [] cert = new byte[certBytes];
-			// Must use read fully!
-			// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
-			fromServer.readFully(cert, 0, certBytes);
-			String temp = "thisisthecert.org.crt";
+			int certLength = fromServer.readInt();
+			byte [] certBytes = new byte[certLength];
+			fromServer.readFully(certBytes, 0, certLength);
+//			String temp = "thisisthecert.org.crt";
 //	    	String temp = Paths.get("Client","thisisthecert.org.crt").toAbsolutePath().toString();
 
-			cert = temp.getBytes();
-			certBytes = cert.length;
+//			cert = temp.getBytes();
+//			certBytes = cert.length;
 //			System.out.println(returnPath(""));
-			fileOutputStream = new FileOutputStream(returnPath(new String(cert, 0, certBytes)));
-			bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream);
-		
+//			fileOutputStream = new FileOutputStream(returnPath(new String(cert, 0, certBytes)));
+//			bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream);
+//		
 			
 			//Start reading content
-			System.out.println("Reading Certificate Content");
+//			System.out.println("Reading Certificate Content");
 			
-			int certCBytes = fromServer.readInt();
-			//System.out.println(certCBytes);
-			byte [] block = new byte[certCBytes];
-			fromServer.readFully(block, 0, certCBytes);
+//			int certLength = fromServer.readInt();
+//			//System.out.println(certCBytes);
+//			byte [] certBytes = new byte[certBytes];
+//			fromServer.readFully(certBytes, 0, certBytes);
+			CertificateFactory cf = CertificateFactory.getInstance("X.509");
+			
+			InputStream serverCertStream = new ByteArrayInputStream(certBytes);
 
-			if (certCBytes > 0)
-				bufferedFileOutputStream.write(block, 0, certCBytes);
+			X509Certificate serverCert =(X509Certificate) cf.generateCertificate(serverCertStream);
+			
+			//Creating X509Certification Object
+			InputStream fis = new FileInputStream(returnPath("cacse.crt"));
 
-			if (certCBytes <= 6000) {
-				System.out.println("Closing file and buffer connection...");
+			
+			X509Certificate CAcert =(X509Certificate)cf.generateCertificate(fis);
+			
 
-				if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
-				if (bufferedFileOutputStream != null) fileOutputStream.close();
-			}
+//			if (certCBytes > 0)
+//				bufferedFileOutputStream.write(block, 0, certCBytes);
+//
+//			if (certCBytes <= 6000) {
+//				System.out.println("Closing file and buffer connection...");
+//
+//				if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
+//				if (bufferedFileOutputStream != null) fileOutputStream.close();
+//			}
 			
 			//Creating X509Certification Object
 //			InputStream fis = new FileInputStream(".\\cacse.crt");
-			InputStream fis = new FileInputStream(returnPath("cacse.crt"));
-
-			CertificateFactory cf = CertificateFactory.getInstance("X.509");
-			X509Certificate CAcert =(X509Certificate)cf.generateCertificate(fis);
-			
-			InputStream serverCertStream = new FileInputStream(returnPath("thisisthecert.org.crt"));
-			CertificateFactory cf2 = CertificateFactory.getInstance("X.509");
-			X509Certificate serverCert =(X509Certificate) cf2.generateCertificate(serverCertStream);
+//			InputStream fis = new FileInputStream(returnPath("cacse.crt"));
+//
+//			CertificateFactory cf = CertificateFactory.getInstance("X.509");
+//			X509Certificate CAcert =(X509Certificate)cf.generateCertificate(fis);
+//			
+//			InputStream serverCertStream = new FileInputStream(returnPath("thisisthecert.org.crt"));
+//			CertificateFactory cf2 = CertificateFactory.getInstance("X.509");
+//			X509Certificate serverCert =(X509Certificate) cf2.generateCertificate(serverCertStream);
 
 			PublicKey CAKey = CAcert.getPublicKey();
 //			PublicKey CAKey = serverCert.getPublicKey();

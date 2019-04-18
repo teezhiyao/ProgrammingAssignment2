@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
@@ -13,6 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 import javax.crypto.Cipher;
@@ -108,31 +111,15 @@ public class ServerWithoutSecurity {
 					
 					System.out.println("Sending Certificate to Client");
 					String certFilename = returnPath("sarthakzhiyao.org.crt");
-
-					toClient.writeInt(certFilename.getBytes().length);
-					toClient.write(certFilename.getBytes());
-					//toServer.flush();
-
-					// Open the file
-					certFileInputStream = new FileInputStream(certFilename);
-					certBufferedFileInputStream = new BufferedInputStream(certFileInputStream);
-
-			        byte [] fromFileBuffer = new byte[6000];
-
-			        // Send the cert
-			        for (boolean fileEnded = false; !fileEnded;) {
-			        	certNumBytes = certBufferedFileInputStream.read(fromFileBuffer);
-						fileEnded = certNumBytes < 6000;
-
-//						toClient.writeInt(1);
-						//System.out.println(certNumBytes);
-						toClient.writeInt(certNumBytes);
-						toClient.write(fromFileBuffer);
-						//toClient.flush();
-					}
-
-			        certBufferedFileInputStream.close();
-			        certFileInputStream.close();
+					
+					InputStream serverCertStream = new FileInputStream(certFilename);
+					CertificateFactory cf = CertificateFactory.getInstance("X.509");
+					X509Certificate serverCert =(X509Certificate) cf.generateCertificate(serverCertStream);
+					
+					byte[] certBytes = serverCert.getEncoded();
+					
+					toClient.writeInt(certBytes.length);
+					toClient.write(certBytes);
 			}
 			 else if (packetType == 3) {
 					System.out.println("Receiving file...");

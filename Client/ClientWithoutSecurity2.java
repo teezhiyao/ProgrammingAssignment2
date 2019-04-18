@@ -99,7 +99,6 @@ public class ClientWithoutSecurity2 {
 			X509Certificate serverCert =(X509Certificate) cf.generateCertificate(serverCertStream);
 			
 			//Creating X509Certification Object
-//			InputStream fis = new FileInputStream(".\\cacse.crt");
 			InputStream fis = new FileInputStream(returnPath("cacse.crt"));
 
 			
