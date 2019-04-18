@@ -30,7 +30,7 @@ public class ClientWithoutSecurity {
 	    
 	    String temp1 = "12345";
 	    
-    	String filename = Paths.get("Client","testing.txt").toAbsolutePath().toString();
+    	String filename = Paths.get("Client","file16MB.txt").toAbsolutePath().toString();
 
 //    	String filename = ".\\testing.txt";
     	if (args.length > 0) filename = args[0];

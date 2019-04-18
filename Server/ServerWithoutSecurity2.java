@@ -136,7 +136,7 @@ public class ServerWithoutSecurity2 {
 					// Must use read fully!
 					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 					fromClient.readFully(filename, 0, numBytes);
-					String temp = "Justgot.txt";
+					String temp = "file125KB.txt";
 					filename = temp.getBytes();
 					numBytes = filename.length;
 
