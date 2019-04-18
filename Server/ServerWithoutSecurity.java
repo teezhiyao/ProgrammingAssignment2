@@ -47,9 +47,12 @@ public class ServerWithoutSecurity {
 
 	        
 			while (!connectionSocket.isClosed()) {
-
 				int packetType = fromClient.readInt();
 
+				//0 for sending nonce
+				//1 for
+				//2 sending cert/file to client
+				//3 receiving file from client
 				// If the packet is for transferring the filename
 				if (packetType == 0) {
 					
@@ -72,52 +75,6 @@ public class ServerWithoutSecurity {
 					
 			        toClient.writeInt(encryptedBytes.length);
 					toClient.write(encryptedBytes);
-					
-					System.out.println("Sending Certificate to Client");
-					
-//			    	String certFilename = ".\\sarthakzhiyao.org.crt";
-			    	String certFilename = returnPath("sarthakzhiyao.org.crt");
-
-					toClient.writeInt(certFilename.getBytes().length);
-					toClient.write(certFilename.getBytes());
-					//toServer.flush();
-
-					// Open the file
-					certFileInputStream = new FileInputStream(certFilename);
-					certBufferedFileInputStream = new BufferedInputStream(certFileInputStream);
-
-			        byte [] fromFileBuffer = new byte[6000];
-
-			        // Send the cert
-			        for (boolean fileEnded = false; !fileEnded;) {
-			        	certNumBytes = certBufferedFileInputStream.read(fromFileBuffer);
-						fileEnded = certNumBytes < 6000;
-
-//						toClient.writeInt(1);
-						//System.out.println(certNumBytes);
-						toClient.writeInt(certNumBytes);
-						toClient.write(fromFileBuffer);
-						//toClient.flush();
-					}
-
-			        certBufferedFileInputStream.close();
-			        certFileInputStream.close();
-					
-		
-					System.out.println("Receiving file...");
-			
-					
-					int numBytes = fromClient.readInt();
-					byte [] filename = new byte[numBytes];
-					// Must use read fully!
-					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
-					fromClient.readFully(filename, 0, numBytes);
-					String temp = "Justgot.txt";
-					filename = temp.getBytes();
-					numBytes = filename.length;
-
-					fileOutputStream = new FileOutputStream(returnPath("") +"\\"+new String(filename, 0, numBytes));
-					bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream);
 
 				// If the packet is for transferring a chunk of the file
 				} else if (packetType == 1) {
@@ -147,6 +104,53 @@ public class ServerWithoutSecurity {
 						connectionSocket.close();
 					}
 				}
+			 else if (packetType == 2) {
+					
+					System.out.println("Sending Certificate to Client");
+					String certFilename = returnPath("sarthakzhiyao.org.crt");
+
+					toClient.writeInt(certFilename.getBytes().length);
+					toClient.write(certFilename.getBytes());
+					//toServer.flush();
+
+					// Open the file
+					certFileInputStream = new FileInputStream(certFilename);
+					certBufferedFileInputStream = new BufferedInputStream(certFileInputStream);
+
+			        byte [] fromFileBuffer = new byte[6000];
+
+			        // Send the cert
+			        for (boolean fileEnded = false; !fileEnded;) {
+			        	certNumBytes = certBufferedFileInputStream.read(fromFileBuffer);
+						fileEnded = certNumBytes < 6000;
+
+//						toClient.writeInt(1);
+						//System.out.println(certNumBytes);
+						toClient.writeInt(certNumBytes);
+						toClient.write(fromFileBuffer);
+						//toClient.flush();
+					}
+
+			        certBufferedFileInputStream.close();
+			        certFileInputStream.close();
+			}
+			 else if (packetType == 3) {
+					System.out.println("Receiving file...");
+					
+					
+					int numBytes = fromClient.readInt();
+					byte [] filename = new byte[numBytes];
+					// Must use read fully!
+					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
+					fromClient.readFully(filename, 0, numBytes);
+					String temp = "Justgot.txt";
+					filename = temp.getBytes();
+					numBytes = filename.length;
+
+					fileOutputStream = new FileOutputStream(returnPath("") +"\\"+new String(filename, 0, numBytes));
+					bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream);
+
+			 }
 
 			}
 		} catch (Exception e) {e.printStackTrace();}
@@ -155,10 +159,8 @@ public class ServerWithoutSecurity {
 	
 	public static PrivateKey getPrivateKey()
 	  throws Exception {
-//		System.out.println(Paths.get("private_key.der").toAbsolutePath().toString());
     	String filename = Paths.get("Server","private_key.der").toAbsolutePath().toString();
 
-//		    	String filename = "\\private_key.der";
 	    byte[] keyBytes = Files.readAllBytes(Paths.get(filename));
 
 	    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);

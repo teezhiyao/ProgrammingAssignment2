@@ -23,7 +23,7 @@ public class ClientWithoutSecurity {
 
 	public static void main(String[] args) {
 		
-	    byte[] nonceArray = new byte[20]; // length is bounded by 7
+	    byte[] nonceArray = new byte[20]; 
 	    new Random().nextBytes(nonceArray);
 	    String nonce = new String(nonceArray, Charset.forName("UTF-8"));
 	    
@@ -77,7 +77,8 @@ public class ClientWithoutSecurity {
 //	        System.out.println("Cipher Text : "+ base64format);
 			
 			System.out.println("Request for Server Certificate");
-			
+			toServer.writeInt(2); //Set PacketType to sending file
+
 			FileOutputStream fileOutputStream = null;
 			BufferedOutputStream bufferedFileOutputStream = null;
 		
@@ -158,7 +159,8 @@ public class ClientWithoutSecurity {
 			System.out.println("Sending file...");
 
 			// Send the filename
-			
+			toServer.writeInt(3);
+
 			toServer.writeInt(filename.getBytes().length);
 			toServer.write(filename.getBytes());
 			//toServer.flush();
