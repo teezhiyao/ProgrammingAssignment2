@@ -1,4 +1,4 @@
-package programmingAssignment2;
+package Server;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -75,7 +75,9 @@ public class ServerWithoutSecurity {
 					
 					System.out.println("Sending Certificate to Client");
 					
-			    	String certFilename = "C:\\Users\\teezh\\eclipse-workspace\\newProject\\src\\programmingAssignment2\\sarthakzhiyao.org.crt";
+//			    	String certFilename = ".\\sarthakzhiyao.org.crt";
+			    	String certFilename = returnPath("sarthakzhiyao.org.crt");
+
 					toClient.writeInt(certFilename.getBytes().length);
 					toClient.write(certFilename.getBytes());
 					//toServer.flush();
@@ -114,7 +116,7 @@ public class ServerWithoutSecurity {
 					filename = temp.getBytes();
 					numBytes = filename.length;
 
-					fileOutputStream = new FileOutputStream("C:\\Users\\teezh\\eclipse-workspace\\newProject\\src\\programmingAssignment2\\"+new String(filename, 0, numBytes));
+					fileOutputStream = new FileOutputStream(returnPath("") +"\\"+new String(filename, 0, numBytes));
 					bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream);
 
 				// If the packet is for transferring a chunk of the file
@@ -153,7 +155,10 @@ public class ServerWithoutSecurity {
 	
 	public static PrivateKey getPrivateKey()
 	  throws Exception {
-    	String filename = "C:\\Users\\teezh\\eclipse-workspace\\newProject\\src\\programmingAssignment2\\private_key.der";
+//		System.out.println(Paths.get("private_key.der").toAbsolutePath().toString());
+    	String filename = Paths.get("Server","private_key.der").toAbsolutePath().toString();
+
+//		    	String filename = "\\private_key.der";
 	    byte[] keyBytes = Files.readAllBytes(Paths.get(filename));
 
 	    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
@@ -161,6 +166,9 @@ public class ServerWithoutSecurity {
 	    return kf.generatePrivate(spec);
 	  }
 
+	public static String returnPath(String path) {
+		return Paths.get("Server",path).toAbsolutePath().toString();
+	}
 }
 
 

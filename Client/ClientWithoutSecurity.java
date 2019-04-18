@@ -1,4 +1,4 @@
-package programmingAssignment2;
+package Client;
 
 
 import java.io.BufferedInputStream;
@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.security.PublicKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -28,8 +29,9 @@ public class ClientWithoutSecurity {
 	    
 	    String temp1 = "12345";
 	    
-	    
-    	String filename = "C:\\Users\\teezh\\eclipse-workspace\\newProject\\src\\programmingAssignment2\\testing.txt";
+    	String filename = Paths.get("Client","testing.txt").toAbsolutePath().toString();
+
+//    	String filename = ".\\testing.txt";
     	if (args.length > 0) filename = args[0];
 
     	String serverAddress = "localhost";
@@ -87,10 +89,12 @@ public class ClientWithoutSecurity {
 			// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 			fromServer.readFully(cert, 0, certBytes);
 			String temp = "thisisthecert.org.crt";
+//	    	String temp = Paths.get("Client","thisisthecert.org.crt").toAbsolutePath().toString();
+
 			cert = temp.getBytes();
 			certBytes = cert.length;
-
-			fileOutputStream = new FileOutputStream("C:\\Users\\teezh\\eclipse-workspace\\newProject\\src\\programmingAssignment2\\"+ new String(cert, 0, certBytes));
+//			System.out.println(returnPath(""));
+			fileOutputStream = new FileOutputStream(returnPath(new String(cert, 0, certBytes)));
 			bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream);
 		
 			
@@ -113,11 +117,13 @@ public class ClientWithoutSecurity {
 			}
 			
 			//Creating X509Certification Object
-			InputStream fis = new FileInputStream("C:\\Users\\teezh\\eclipse-workspace\\newProject\\src\\programmingAssignment2\\cacse.crt");
+//			InputStream fis = new FileInputStream(".\\cacse.crt");
+			InputStream fis = new FileInputStream(returnPath("cacse.crt"));
+
 			CertificateFactory cf = CertificateFactory.getInstance("X.509");
 			X509Certificate CAcert =(X509Certificate)cf.generateCertificate(fis);
 			
-			InputStream serverCertStream = new FileInputStream("C:\\Users\\teezh\\eclipse-workspace\\newProject\\src\\programmingAssignment2\\thisisthecert.org.crt");
+			InputStream serverCertStream = new FileInputStream(returnPath("thisisthecert.org.crt"));
 			CertificateFactory cf2 = CertificateFactory.getInstance("X.509");
 			X509Certificate serverCert =(X509Certificate) cf2.generateCertificate(serverCertStream);
 
@@ -192,5 +198,9 @@ public class ClientWithoutSecurity {
 
 		long timeTaken = System.nanoTime() - timeStarted;
 		System.out.println("Program took: " + timeTaken/1000000.0 + "ms to run");
+	}
+	
+	public static String returnPath(String path) {
+		return Paths.get("Client",path).toAbsolutePath().toString();
 	}
 }
