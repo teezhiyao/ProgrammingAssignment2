@@ -18,23 +18,24 @@ import java.security.cert.X509Certificate;
 import java.util.Random;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
-public class ClientWithoutSecurity2 {
+public class ClientCP2 {
 
 	public static void main(String[] args) {
 		
-	    byte[] nonceArray = new byte[20]; 
-	    new Random().nextBytes(nonceArray);
-	    String nonce = new String(nonceArray, Charset.forName("UTF-8"));
+	   int temp = new Random().nextInt();
+	   String nonce = Integer.toString(temp);
+	   
+	   
 	    
-	    String temp1 = "12345";
-	    
-    	String filename = Paths.get("Client","file64KB.txt").toAbsolutePath().toString();
+	    String filename_send = "file128KB.txt";
+    	String filename = Paths.get("Client",filename_send).toAbsolutePath().toString();
 
-//    	String filename = ".\\testing.txt";
+    	
     	if (args.length > 0) filename = args[0];
 
     	String serverAddress = "localhost";
@@ -66,10 +67,10 @@ public class ClientWithoutSecurity2 {
 			
 			toServer.writeInt(0); //Set PacketType
 
-			System.out.println("Sending nonce..." + temp1);
-//			toServer.writeInt(20);
-			toServer.writeInt(temp1.getBytes().length);
-			toServer.write(temp1.getBytes());
+			System.out.println("Sending nonce..." + nonce);
+
+			toServer.writeInt(nonce.getBytes().length);
+			toServer.write(nonce.getBytes());
 			
 			System.out.println("Getting Encrypted Nonce");
 			int encryptedNonceLength = fromServer.readInt();
@@ -123,40 +124,52 @@ public class ClientWithoutSecurity2 {
 			Cipher cipher1 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 			cipher1.init(Cipher.DECRYPT_MODE, serverKey);
 			byte[] decryptedNonceBytes = cipher1.doFinal(encryptedNonce);
-			String omg = new String(decryptedNonceBytes);
+			String nonceFromServer = new String(decryptedNonceBytes);
 			
-			if (!omg.equals(temp1)) {
+			if (!nonceFromServer.equals(nonce)) {
 				System.out.println("Nonce is incorrect. Bye (Close Connection)");
 				clientSocket.close();
 			}
-			System.out.println("Decrypted Nonce is " +  omg);
+			System.out.println("Decrypted Nonce is " +  nonceFromServer);
 			//SESSION KEY 
+
 			toServer.writeInt(4);
-			System.out.println("Requesting for Session Key");
+			System.out.println("Generating the Session Key");
+			//Creating a session Key
+	        SecretKey sKey = KeyGenerator.getInstance("AES").generateKey();
+			System.out.println("Sending session key..." + sKey.getEncoded());
 			
-			int skeylength = fromServer.readInt();
-			
-			byte[] encryptedKey = new byte[skeylength];
-			fromServer.readFully(encryptedKey,0,skeylength);
-			System.out.println("Encrypted Key length");
-			System.out.println(skeylength);
 			Cipher keyCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-			keyCipher.init(Cipher.DECRYPT_MODE, serverKey);
-			byte[] decryptedKey = keyCipher.doFinal(encryptedKey);
+			keyCipher.init(Cipher.ENCRYPT_MODE, serverKey);
+			byte[] encryptedKey = keyCipher.doFinal(sKey.getEncoded());
+
+			toServer.writeInt(encryptedKey.length);
+			System.out.println("The length of the encrypted Key " + encryptedKey.length);
+
+			toServer.write(encryptedKey);
 			
 			
 			
-			SecretKey sKey = new SecretKeySpec(decryptedKey,0,decryptedKey.length,"AES");
+//			int skeylength = fromServer.readInt();
 			
-			System.out.println("Key Length is : "+ sKey.getEncoded().length);
+//			byte[] encryptedKey = new byte[skeylength];
+//			fromServer.readFully(encryptedKey,0,skeylength);
+//			System.out.println("Encrypted Key length");
+//			System.out.println(skeylength);
+//			Cipher keyCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+//			keyCipher.init(Cipher.DECRYPT_MODE, serverKey);
+//			byte[] decryptedKey = keyCipher.doFinal(encryptedKey);
+//			SecretKey sKey = new SecretKeySpec(decryptedKey,0,decryptedKey.length,"AES");
+//			
+//			System.out.println("Key Length is : "+ sKey.getEncoded().length);
 
 			System.out.println("Sending file...");
 
 			// Send the filename
 			toServer.writeInt(3);
 
-			toServer.writeInt(filename.getBytes().length);
-			toServer.write(filename.getBytes());
+			toServer.writeInt(filename_send.getBytes().length);
+			toServer.write(filename_send.getBytes());
 			//toServer.flush();
 
 			// Open the file
@@ -171,7 +184,7 @@ public class ClientWithoutSecurity2 {
 				fileEnded = numBytes < 117;
 
 				toServer.writeInt(1);
-				System.out.println(numBytes);
+				//System.out.println(numBytes);
 				
 				
 				Cipher ecipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
@@ -190,6 +203,7 @@ public class ClientWithoutSecurity2 {
 	        fileInputStream.close();
 
 			System.out.println("Closing connection...");
+			clientSocket.close();
 
 		} catch (Exception e) {e.printStackTrace();}
 
