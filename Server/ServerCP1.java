@@ -19,11 +19,9 @@ import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import javax.xml.bind.DatatypeConverter;
 
-public class ServerWithoutSecurity2 {
+public class ServerCP1 {
 
 	public static void main(String[] args) {
 
@@ -37,8 +35,6 @@ public class ServerWithoutSecurity2 {
 
 		FileOutputStream fileOutputStream = null;
 		BufferedOutputStream bufferedFileOutputStream = null;
-		
-		SecretKey sKey = null;
 
 		try {
 			welcomeSocket = new ServerSocket(port);
@@ -55,7 +51,7 @@ public class ServerWithoutSecurity2 {
 	        
 			while (!connectionSocket.isClosed()) {
 				int packetType = fromClient.readInt();
-
+				
 				//0 for sending nonce
 				//1 for
 				//2 sending cert/file to client
@@ -88,13 +84,13 @@ public class ServerWithoutSecurity2 {
 
 					int numBytes = fromClient.readInt();
 					int decryptedByteslength = fromClient.readInt();
-					System.out.println(numBytes);
-					System.out.println(decryptedByteslength);
+//					System.out.println(numBytes);
+//					System.out.println(decryptedByteslength);
 					byte [] block = new byte[decryptedByteslength];
 					fromClient.readFully(block, 0, decryptedByteslength);
 					
-					Cipher dcipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-					dcipher.init(Cipher.DECRYPT_MODE, sKey);
+					Cipher dcipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+					dcipher.init(Cipher.DECRYPT_MODE, getPrivateKey());
 					byte[] decryptedBytes = dcipher.doFinal(block);
 					
 
@@ -106,6 +102,7 @@ public class ServerWithoutSecurity2 {
 
 						if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
 						if (bufferedFileOutputStream != null) fileOutputStream.close();
+//						toClient.writeInt(5);
 						fromClient.close();
 						toClient.close();
 						connectionSocket.close();
@@ -124,8 +121,6 @@ public class ServerWithoutSecurity2 {
 					
 					toClient.writeInt(certBytes.length);
 					toClient.write(certBytes);
-					
-					
 			}
 			 else if (packetType == 3) {
 					System.out.println("Receiving file...");
@@ -136,27 +131,11 @@ public class ServerWithoutSecurity2 {
 					// Must use read fully!
 					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 					fromClient.readFully(filename, 0, numBytes);
-					String temp = "file125KB.txt";
-					filename = temp.getBytes();
 					numBytes = filename.length;
 
 					fileOutputStream = new FileOutputStream(returnPath("") +"\\"+new String(filename, 0, numBytes));
 					bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream);
 
-			 }
-			 else if (packetType == 4) {
-					//Creating a session Key
-			        sKey = KeyGenerator.getInstance("AES").generateKey();
-					System.out.println("Sending session key..." + sKey.getEncoded());
-					
-					Cipher keyCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-					keyCipher.init(Cipher.ENCRYPT_MODE, getPrivateKey());
-					byte[] encryptedKey = keyCipher.doFinal(sKey.getEncoded());
-
-					toClient.writeInt(encryptedKey.length);
-					System.out.println("The length of the encrypted Key " + encryptedKey.length);
-
-					toClient.write(encryptedKey);
 			 }
 
 			}
